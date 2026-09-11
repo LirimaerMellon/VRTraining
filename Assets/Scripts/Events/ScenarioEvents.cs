@@ -28,19 +28,13 @@ namespace VRTraining.Events
         public static event Action<StepResult> OnStepCompleted;
         public static void RaiseStepCompleted(StepResult result) => OnStepCompleted?.Invoke(result);
 
-        /// <summary>Нарушен порядок выполнения шагов внутри группы — группа закрывается.</summary>
+        /// <summary>
+        /// Нарушен порядок выполнения шагов — по ТЗ вся текущая группа шагов
+        /// закрывается (непройденные шаги помечаются как Skipped через
+        /// OnStepCompleted) и сценарий переходит к следующей группе.
+        /// </summary>
         public static event Action<int> OnGroupSequenceViolated;
         public static void RaiseGroupSequenceViolated(int groupIndex) => OnGroupSequenceViolated?.Invoke(groupIndex);
-
-        /// <summary>
-        /// Игрок попытался выполнить более поздний шаг группы не по порядку.
-        /// Текущий шаг НЕ завершается и не считается ни успешным, ни ошибочным —
-        /// это только временное предупреждение "подожди, сначала нужно вот это".
-        /// Специально отделено от OnStepCompleted, чтобы UI списка шагов не помечал
-        /// ещё не пройденный шаг как "выполнено с ошибкой".
-        /// </summary>
-        public static event Action<StepDefinition> OnSequenceViolationWarning;
-        public static void RaiseSequenceViolationWarning(StepDefinition expectedStep) => OnSequenceViolationWarning?.Invoke(expectedStep);
 
         /// <summary>Сценарий полностью завершён — итоговые результаты по каждому шагу.</summary>
         public static event Action<StepResult[]> OnScenarioCompleted;
@@ -66,7 +60,6 @@ namespace VRTraining.Events
             OnStepActivated = null;
             OnStepCompleted = null;
             OnGroupSequenceViolated = null;
-            OnSequenceViolationWarning = null;
             OnScenarioCompleted = null;
             OnRestartRequested = null;
             OnReturnToLobbyRequested = null;

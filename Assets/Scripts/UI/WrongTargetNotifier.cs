@@ -7,10 +7,10 @@ using VRTraining.Events;
 namespace VRTraining.UI
 {
     /// <summary>
-    /// Показывает короткое предупреждение на экране, если игрок выполнил
-    /// действие с неверной целью (подошёл не к тому месту/предмету) —
-    /// StepStatus.CompletedWithError. Ничего не знает о ScenarioController
-    /// напрямую, только слушает OnStepCompleted, как и остальные независимые
+    /// Показывает короткое предупреждение на экране при ошибке шага
+    /// (StepStatus.CompletedWithError) и при закрытии группы из-за нарушения
+    /// порядка (OnGroupSequenceViolated). Ничего не знает о ScenarioController
+    /// напрямую — только слушает события, как и остальные независимые
     /// UI/звук/подсветка системы.
     /// </summary>
     public class WrongTargetNotifier : MonoBehaviour
@@ -24,32 +24,32 @@ namespace VRTraining.UI
         private void OnEnable()
         {
             ScenarioEvents.OnStepCompleted += HandleStepCompleted;
-            ScenarioEvents.OnSequenceViolationWarning += HandleSequenceViolationWarning;
+            ScenarioEvents.OnGroupSequenceViolated += HandleGroupSequenceViolated;
             if (warningRoot != null) warningRoot.SetActive(false);
         }
 
         private void OnDisable()
         {
             ScenarioEvents.OnStepCompleted -= HandleStepCompleted;
-            ScenarioEvents.OnSequenceViolationWarning -= HandleSequenceViolationWarning;
+            ScenarioEvents.OnGroupSequenceViolated -= HandleGroupSequenceViolated;
         }
 
         private void HandleStepCompleted(StepResult result)
         {
             if (result.Status != StepStatus.CompletedWithError) return;
-            ShowWarning(result.Step.description);
+            ShowWarning($"Неверно! Ожидалось: {result.Step.description}");
         }
 
-        private void HandleSequenceViolationWarning(StepDefinition expectedStep)
+        private void HandleGroupSequenceViolated(int groupIndex)
         {
-            ShowWarning(expectedStep.description);
+            ShowWarning("Нарушен порядок выполнения! Этап завершён, переходим к следующему.");
         }
 
-        private void ShowWarning(string expectedStepDescription)
+        private void ShowWarning(string message)
         {
             if (warningRoot == null || warningText == null) return;
 
-            warningText.text = $"Неверно! Ожидалось: {expectedStepDescription}";
+            warningText.text = message;
             warningRoot.SetActive(true);
 
             if (_hideRoutine != null) StopCoroutine(_hideRoutine);

@@ -72,13 +72,16 @@ namespace VRTraining.Scenario
                     break;
 
                 case ActionValidationResult.WrongTarget:
+                    // Неверная цель (подошёл не туда/кликнул не то/нажал не ту кнопку) —
+                    // по ТЗ шаг завершается с отметкой об ошибке, и сценарий идёт дальше.
+                    CompleteStep(StepStatus.CompletedWithError, ViolationType.WrongTarget);
+                    AdvanceStep(group);
+                    break;
+
                 case ActionValidationResult.SequenceViolation:
-                    // И "не тот объект" (тип действия верный, цель — нет), и "не по
-                    // порядку" (совпало с другим шагом этой же группы) — это ошибка
-                    // ПОПЫТКИ, а не провал шага. Группу и шаг НЕ закрываем, дальше не
-                    // переходим — просто показываем предупреждение и ждём, пока игрок
-                    // выполнит именно текущий ожидаемый шаг.
-                    NotifyMistake(group);
+                    // Нарушение порядка выполнения — по ТЗ закрываем всю текущую
+                    // группу шагов и переходим к следующей.
+                    CloseGroupOnSequenceViolation(group);
                     break;
 
                 case ActionValidationResult.NotRelevant:
@@ -110,15 +113,24 @@ namespace VRTraining.Scenario
             }
         }
 
-        private void NotifyMistake(StepGroupDefinition group)
+        private void CloseGroupOnSequenceViolation(StepGroupDefinition group)
         {
-            // Ни WrongTarget, ни SequenceViolation не считаются завершением шага —
-            // текущий шаг остаётся текущим, ничего не помечается ни выполненным, ни
-            // проваленным. Специально НЕ используем OnStepCompleted здесь: это событие
-            // означает "шаг завершён", и StepGroupInfoPanel из-за него навсегда
-            // помечал бы ещё не пройденный шаг как проваленный.
-            StepDefinition step = group.steps[_currentStepIndex];
-            ScenarioEvents.RaiseSequenceViolationWarning(step);
+            // По ТЗ: при нарушении порядка выполнения вся группа закрывается.
+            // Уже пройденные шаги сохраняют свой статус (они попали в _results
+            // раньше, здесь их не трогаем), а все ещё не пройденные шаги —
+            // включая тот, что игрок пытался сделать не по порядку, — помечаются
+            // как "пропущенные".
+            ScenarioEvents.RaiseGroupSequenceViolated(_currentGroupIndex);
+
+            for (int i = _currentStepIndex; i < group.steps.Count; i++)
+            {
+                StepDefinition step = group.steps[i];
+                var result = new StepResult(_currentGroupIndex, i, step, StepStatus.Skipped, ViolationType.SequenceViolation);
+                _results.Add(result);
+                ScenarioEvents.RaiseStepCompleted(result);
+            }
+
+            AdvanceGroup();
         }
 
         private void AdvanceGroup()

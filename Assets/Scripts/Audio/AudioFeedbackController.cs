@@ -25,18 +25,20 @@ namespace VRTraining.Audio
         private void OnEnable()
         {
             ScenarioEvents.OnStepCompleted += HandleStepCompleted;
+            ScenarioEvents.OnGroupSequenceViolated += HandleGroupSequenceViolated;
         }
 
         private void OnDisable()
         {
             ScenarioEvents.OnStepCompleted -= HandleStepCompleted;
+            ScenarioEvents.OnGroupSequenceViolated -= HandleGroupSequenceViolated;
         }
 
         private void HandleStepCompleted(StepResult result)
         {
             // Пропущенные шаги (Skipped) — следствие закрытия группы при нарушении
-            // порядка, отдельный сигнал для них не проигрываем, чтобы не путать
-            // пользователя дополнительным звуком поверх сигнала о нарушении порядка.
+            // порядка, отдельный сигнал для них не проигрываем: сигнал ошибки уже
+            // проигрывается один раз через HandleGroupSequenceViolated.
             switch (result.Status)
             {
                 case StepStatus.Completed:
@@ -46,6 +48,11 @@ namespace VRTraining.Audio
                     PlayClip(errorClip);
                     break;
             }
+        }
+
+        private void HandleGroupSequenceViolated(int groupIndex)
+        {
+            PlayClip(errorClip);
         }
 
         private void PlayClip(AudioClip clip)
