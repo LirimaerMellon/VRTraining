@@ -1,0 +1,32 @@
+{
+  "scenarioName": "Проверка пропуска на объект",
+  "groups": [
+    {
+      "groupName": "Проверка документов",
+      "introMessage": "Подойдите к стойке, возьмите паспорт посетителя и нажмите кнопку \"Подтвердить\".",
+      "steps": [
+        { "id": 1, "description": "Подойти к стойке проверки", "expectedAction": 0, "target": "zone_checkpoint" },
+        { "id": 2, "description": "Взять паспорт посетителя", "expectedAction": 1, "target": "passport" },
+        { "id": 3, "description": "Подтвердить проверку документов", "expectedAction": 3, "target": "button_confirm_docs" }
+      ]
+    },
+    {
+      "groupName": "Осмотр вещей",
+      "introMessage": "Подойдите к столу досмотра и кликните на подозрительный предмет, затем подтвердите осмотр.",
+      "steps": [
+        { "id": 4, "description": "Подойти к столу досмотра", "expectedAction": 0, "target": "zone_inspection" },
+        { "id": 5, "description": "Кликнуть на подозрительный предмет", "expectedAction": 2, "target": "suspicious_item" },
+        { "id": 6, "description": "Подтвердить результат осмотра", "expectedAction": 3, "target": "button_confirm_inspection" }
+      ]
+    },
+    {
+      "groupName": "Оформление пропуска",
+      "introMessage": "Подойдите к терминалу, возьмите бланк пропуска и нажмите кнопку печати.",
+      "steps": [
+        { "id": 7, "description": "Подойти к терминалу оформления", "expectedAction": 0, "target": "zone_terminal" },
+        { "id": 8, "description": "Взять бланк пропуска", "expectedAction": 1, "target": "pass_form" },
+        { "id": 9, "description": "Нажать кнопку печати пропуска", "expectedAction": 3, "target": "button_print_pass" }
+      ]
+    }
+  ]
+}
